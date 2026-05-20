@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no" />
-  <title>粉色爱心</title>
+  <title>致 cc</title>
   <style>
     html, body {
       margin: 0;
@@ -11,176 +11,369 @@
       height: 100%;
       overflow: hidden;
       background: linear-gradient(135deg, #120012, #000000);
-      touch-action: none;
+      font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
       -webkit-user-select: none;
       user-select: none;
+      touch-action: none;
     }
 
-    canvas {
-      display: block;
+    canvas.bg {
+      position: fixed;
+      inset: 0;
       width: 100vw;
       height: 100vh;
+      display: block;
+      z-index: 0;
+    }
+
+    .overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 2;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+      pointer-events: none;
+    }
+
+    .top-gallery {
+      height: 42vh;
+      overflow: hidden;
+      position: relative;
+      margin: 20px 0 0;
+      pointer-events: none;
+    }
+
+    .track {
+      display: flex;
+      width: max-content;
+      animation: scrollLeft 38s linear infinite;
+      gap: 16px;
+      padding: 0 16px;
+      align-items: center;
+      height: 100%;
+    }
+
+    .photo {
+      flex: 0 0 auto;
+      width: 160px;
+      height: 220px;
+      border-radius: 18px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0,0,0,.35);
+      border: 2px solid rgba(255,255,255,.18);
+      background: rgba(255,255,255,.06);
+      transform: rotate(var(--r, 0deg));
+    }
+
+    .photo img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    @keyframes scrollLeft {
+      from { transform: translateX(0); }
+      to { transform: translateX(-50%); }
+    }
+
+    .letter-wrap {
+      height: 50vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+      padding: 0 16px 18px;
+      box-sizing: border-box;
+    }
+
+    .letter {
+      width: min(900px, calc(100vw - 24px));
+      max-height: 48vh;
+      overflow: hidden;
+      position: relative;
+      border-radius: 22px;
+      background: rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255,255,255,0.18);
+      backdrop-filter: blur(10px);
+      box-shadow: 0 10px 30px rgba(0,0,0,.28);
+      padding: 18px 18px 16px;
+      color: rgba(255,255,255,.92);
+      text-shadow: 0 1px 6px rgba(0,0,0,.25);
+    }
+
+    .letter::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(to bottom, rgba(255,255,255,.06), rgba(255,255,255,0));
+      pointer-events: none;
+    }
+
+    .letter-content {
+      white-space: pre-wrap;
+      line-height: 1.95;
+      font-size: 18px;
+      animation: scrollUp 40s linear infinite;
+      padding-bottom: 40px;
+    }
+
+    @keyframes scrollUp {
+      from { transform: translateY(0); }
+      to { transform: translateY(-50%); }
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      color: #ffd6e7;
+      text-align: center;
+    }
+
+    .music-btn {
+      position: fixed;
+      right: 18px;
+      top: 18px;
+      z-index: 5;
+      pointer-events: auto;
+      border: none;
+      padding: 12px 16px;
+      border-radius: 999px;
+      background: rgba(255, 105, 180, 0.92);
+      color: #fff;
+      font-size: 14px;
+      box-shadow: 0 8px 20px rgba(255, 105, 180, 0.35);
+      display: none;
     }
 
     .hint {
       position: fixed;
       left: 50%;
-      bottom: 24px;
+      bottom: 10px;
       transform: translateX(-50%);
-      color: rgba(255, 255, 255, 0.75);
-      font-size: 14px;
-      font-family: Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
+      z-index: 4;
+      color: rgba(255,255,255,.72);
+      font-size: 13px;
+      text-shadow: 0 1px 4px rgba(0,0,0,.35);
       pointer-events: none;
-      text-shadow: 0 0 8px rgba(255, 105, 180, 0.6);
+    }
+
+    @media (max-width: 768px) {
+      .photo {
+        width: 116px;
+        height: 160px;
+      }
+      .top-gallery {
+        height: 34vh;
+      }
+      .letter-wrap {
+        height: 58vh;
+      }
+      .letter {
+        max-height: 56vh;
+      }
+      .letter-content {
+        font-size: 16px;
+        line-height: 1.8;
+      }
+      .title {
+        font-size: 20px;
+      }
     }
   </style>
 </head>
 <body>
-<canvas id="c"></canvas>
-<div class="hint">点击屏幕，生成更多爱心</div>
+  <canvas class="bg" id="bg"></canvas>
 
-<script>
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
+  <button class="music-btn" id="musicBtn">点击播放音乐</button>
+  <div class="hint">点击屏幕也可以生成更多爱心</div>
 
-function resize() {
-  const dpr = window.devicePixelRatio || 1;
-  canvas.width = window.innerWidth * dpr;
-  canvas.height = window.innerHeight * dpr;
-  canvas.style.width = window.innerWidth + 'px';
-  canvas.style.height = window.innerHeight + 'px';
-  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-}
-resize();
-window.addEventListener('resize', resize);
+  <div class="overlay">
+    <div class="top-gallery">
+      <div class="track" id="track"></div>
+    </div>
 
-const colors = ['#ff69b4', '#ff1493', '#ff85c1', '#ffb6c1', '#ffc0cb', '#ff4fa3'];
+    <div class="letter-wrap">
+      <div class="letter">
+        <div class="letter-content" id="letterContent"></div>
+      </div>
+    </div>
+  </div>
 
-function heartPath(x, y, size) {
-  const pts = [];
-  for (let i = 0; i <= 100; i++) {
-    const t = Math.PI * 2 * i / 100;
-    const px = 16 * Math.pow(Math.sin(t), 3);
-    const py = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-    pts.push([x + px * size / 18, y - py * size / 18]);
-  }
-  return pts;
-}
+  <audio id="bgm" src="如果当时.mp3" loop></audio>
 
-function drawHeart(x, y, size, color, alpha = 1, scale = 1, glow = false) {
-  ctx.save();
-  ctx.globalAlpha = alpha;
-
-  if (glow) {
-    ctx.shadowColor = color;
-    ctx.shadowBlur = 18;
-  }
-
-  ctx.fillStyle = color;
-  ctx.beginPath();
-  const pts = heartPath(x, y, size * scale);
-  ctx.moveTo(pts[0][0], pts[0][1]);
-  for (let i = 1; i < pts.length; i++) {
-    ctx.lineTo(pts[i][0], pts[i][1]);
-  }
-  ctx.closePath();
-  ctx.fill();
-  ctx.restore();
-}
-
-const hearts = [];
-
-function addHeart(x, y, burst = false) {
-  const size = burst ? 18 + Math.random() * 36 : 14 + Math.random() * 42;
-  hearts.push({
-    x,
-    y,
-    size,
-    dx: (Math.random() - 0.5) * (burst ? 2.2 : 0.7),
-    dy: (Math.random() - 0.5) * (burst ? 2.2 : 0.7),
-    color: colors[Math.floor(Math.random() * colors.length)],
-    pulse: Math.random() * Math.PI * 2,
-    life: 1,
-    rot: Math.random() * Math.PI * 2
-  });
-}
-
-function fillScreen() {
-  hearts.length = 0;
-  const count = Math.max(60, Math.floor((window.innerWidth * window.innerHeight) / 22000));
-  for (let i = 0; i < count; i++) {
-    addHeart(Math.random() * window.innerWidth, Math.random() * window.innerHeight, false);
-  }
-}
-fillScreen();
-
-function drawBackground() {
-  ctx.clearRect(0, 0, window.innerWidth, window.innerHeight);
-
-  const grad = ctx.createRadialGradient(
-    window.innerWidth / 2, window.innerHeight / 2, 0,
-    window.innerWidth / 2, window.innerHeight / 2, Math.max(window.innerWidth, window.innerHeight)
-  );
-  grad.addColorStop(0, 'rgba(255, 105, 180, 0.12)');
-  grad.addColorStop(1, 'rgba(0, 0, 0, 0)');
-  ctx.fillStyle = grad;
-  ctx.fillRect(0, 0, window.innerWidth, window.innerHeight);
-}
-
-function animate() {
-  drawBackground();
-
-  for (let i = hearts.length - 1; i >= 0; i--) {
-    const h = hearts[i];
-    h.x += h.dx;
-    h.y += h.dy;
-    h.pulse += 0.05;
-    h.life -= 0.0005;
-
-    const scale = 1 + Math.sin(h.pulse) * 0.06;
-    const alpha = Math.max(0.25, 0.85 + Math.sin(h.pulse) * 0.15);
-
-    drawHeart(h.x, h.y, h.size, h.color, alpha, scale, true);
-
-    // 出界回弹
-    if (h.x < -120) h.x = window.innerWidth + 120;
-    if (h.x > window.innerWidth + 120) h.x = -120;
-    if (h.y < -120) h.y = window.innerHeight + 120;
-    if (h.y > window.innerHeight + 120) h.y = -120;
-
-    // 太久自动更新位置，让画面一直“活着”
-    if (h.life <= 0) {
-      hearts.splice(i, 1);
-      addHeart(Math.random() * window.innerWidth, Math.random() * window.innerHeight, false);
+  <script>
+    // ===== 背景爱心 =====
+    const canvas = document.getElementById('bg');
+    const ctx = canvas.getContext('2d');
+    function resize() {
+      const dpr = window.devicePixelRatio || 1;
+      canvas.width = innerWidth * dpr;
+      canvas.height = innerHeight * dpr;
+      canvas.style.width = innerWidth + 'px';
+      canvas.style.height = innerHeight + 'px';
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     }
-  }
+    resize();
+    addEventListener('resize', resize);
 
-  requestAnimationFrame(animate);
-}
-animate();
+    const colors = ['#ff69b4', '#ff1493', '#ff85c1', '#ffb6c1', '#ffc0cb', '#ff4fa3'];
+    const hearts = [];
 
-// 点击 / 触摸生成更多爱心
-function burstAt(x, y) {
-  for (let i = 0; i < 18; i++) {
-    addHeart(
-      x + (Math.random() - 0.5) * 40,
-      y + (Math.random() - 0.5) * 40,
-      true
-    );
-  }
-}
+    function heartPath(x, y, size) {
+      const pts = [];
+      for (let i = 0; i <= 100; i++) {
+        const t = Math.PI * 2 * i / 100;
+        const px = 16 * Math.pow(Math.sin(t), 3);
+        const py = 13 * Math.cos(t) - 5 * Math.cos(2*t) - 2 * Math.cos(3*t) - Math.cos(4*t);
+        pts.push([x + px * size / 18, y - py * size / 18]);
+      }
+      return pts;
+    }
 
-window.addEventListener('click', (e) => {
-  burstAt(e.clientX, e.clientY);
-});
+    function addHeart(x, y, burst = false) {
+      hearts.push({
+        x, y,
+        size: burst ? 18 + Math.random()*28 : 12 + Math.random()*34,
+        dx: (Math.random()-0.5) * (burst ? 2 : 0.6),
+        dy: (Math.random()-0.5) * (burst ? 2 : 0.6),
+        color: colors[Math.floor(Math.random()*colors.length)],
+        pulse: Math.random()*Math.PI*2,
+        life: 1
+      });
+    }
 
-window.addEventListener('touchstart', (e) => {
-  if (e.touches.length > 0) {
-    const t = e.touches[0];
-    burstAt(t.clientX, t.clientY);
-  }
-});
+    for (let i = 0; i < 70; i++) {
+      addHeart(Math.random()*innerWidth, Math.random()*innerHeight);
+    }
 
-</script>
+    function drawHeart(x, y, size, color, alpha=1, scale=1) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.shadowColor = color;
+      ctx.shadowBlur = 18;
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      const pts = heartPath(x, y, size * scale);
+      ctx.moveTo(pts[0][0], pts[0][1]);
+      for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i][0], pts[i][1]);
+      ctx.closePath();
+      ctx.fill();
+      ctx.restore();
+    }
+
+    function drawBg() {
+      ctx.clearRect(0,0,innerWidth,innerHeight);
+      const g = ctx.createRadialGradient(innerWidth/2, innerHeight/2, 0, innerWidth/2, innerHeight/2, Math.max(innerWidth, innerHeight));
+      g.addColorStop(0, 'rgba(255,105,180,0.12)');
+      g.addColorStop(1, 'rgba(0,0,0,0)');
+      ctx.fillStyle = g;
+      ctx.fillRect(0,0,innerWidth,innerHeight);
+    }
+
+    function animate() {
+      drawBg();
+      for (let i = hearts.length - 1; i >= 0; i--) {
+        const h = hearts[i];
+        h.x += h.dx;
+        h.y += h.dy;
+        h.pulse += 0.05;
+        h.life -= 0.0004;
+
+        const scale = 1 + Math.sin(h.pulse) * 0.07;
+        const alpha = 0.78 + Math.sin(h.pulse) * 0.18;
+
+        drawHeart(h.x, h.y, h.size, h.color, alpha, scale);
+
+        if (h.x < -120) h.x = innerWidth + 120;
+        if (h.x > innerWidth + 120) h.x = -120;
+        if (h.y < -120) h.y = innerHeight + 120;
+        if (h.y > innerHeight + 120) h.y = -120;
+
+        if (h.life <= 0) {
+          hearts.splice(i, 1);
+          addHeart(Math.random()*innerWidth, Math.random()*innerHeight);
+        }
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    function burstAt(x, y) {
+      for (let i = 0; i < 18; i++) addHeart(x + (Math.random()-0.5)*36, y + (Math.random()-0.5)*36, true);
+    }
+
+    addEventListener('click', (e) => burstAt(e.clientX, e.clientY));
+    addEventListener('touchstart', (e) => {
+      if (e.touches.length) {
+        const t = e.touches[0];
+        burstAt(t.clientX, t.clientY);
+      }
+    });
+
+    // ===== 照片横向滚动 =====
+    const photos = [
+      '1.jpg','2.jpg','3.jpg','4.jpg','5.jpg','6.jpg','7.jpg','8.jpg',
+      '9.jpg','10.jpg','11.jpg','12.jpg','13.jpg','14.jpg','15.jpg','16.jpg',
+      '17.jpg','18.jpg','19.jpg','20.jpg','21.jpg','22.jpg','23.jpg','24.jpg',
+      '25.jpg','26.jpg'
+    ];
+
+    const track = document.getElementById('track');
+    function buildPhotos() {
+      track.innerHTML = '';
+      const list = [...photos, ...photos];
+      list.forEach((src, idx) => {
+        const d = document.createElement('div');
+        d.className = 'photo';
+        d.style.setProperty('--r', ((idx % 6) - 2.5) + 'deg');
+        d.innerHTML = `<img src="${src}" alt="${src}">`;
+        track.appendChild(d);
+      });
+    }
+    buildPhotos();
+
+    // ===== 信件内容 =====
+    const letter = `To cc：
+
+你近来安否？每当晚风漫过窗台，心事便顺着暮色慢慢漫上来。世间人总把心事藏进黄昏，让愁绪揉碎成朦胧的雾色，晕开整片温柔又怅然的昏沉。我总觉得，你比旁人更懂这份沉寂，习惯在暮色里独自缄默，像捧着一段未写完的心事，慢慢斟酌，静静安放。
+
+亲爱的cc，不必总故作无恙，不必次次都勉强自己万事顺遂。有人说，温柔的人最易背负情绪，也最习惯独自消化所有困顿。纵使我的问候或许冒昧唐突，我仍想认真告诉你：不必时刻紧绷，不必独自硬扛，难过可以坦然流露，脆弱从来都无需遮掩。
+
+你正走过一段低沉缓慢的旅途，我无力替你拨开前路的迷雾，也无法抹平所有困顿与荒芜。可我愿意安静站在你身旁，陪你熬过晦暗的时刻，倾听你所有难言的情绪，接住你所有细碎的落寞。
+
+我最爱的cc宝宝，人生本就是一场跌宕的奔赴，悲欢起落皆是常态。在岁月未走到尽头之前，我愿陪你走过晨昏，熬过荒芜，同你共饮人间冷暖，静待雾散风来。
+
+—— 爱你的那个人`;
+
+    document.getElementById('letterContent').textContent = letter + '\n\n' + letter;
+
+    // ===== 音乐自动播放 =====
+    const bgm = document.getElementById('bgm');
+    const musicBtn = document.getElementById('musicBtn');
+
+    async function tryPlay() {
+      try {
+        await bgm.play();
+        musicBtn.style.display = 'none';
+      } catch (e) {
+        musicBtn.style.display = 'block';
+      }
+    }
+
+    tryPlay();
+
+    musicBtn.addEventListener('click', async () => {
+      try {
+        await bgm.play();
+        musicBtn.style.display = 'none';
+      } catch (e) {}
+    });
+
+    // 用户首次交互后再尝试一次
+    addEventListener('click', tryPlay, { once: true });
+    addEventListener('touchstart', tryPlay, { once: true });
+  </script>
 </body>
 </html>
